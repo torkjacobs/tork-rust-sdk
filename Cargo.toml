@@ -1,0 +1,26 @@
+[package]
+name = "tork-governance"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tork Network <developers@tork.network>"]
+description = "On-device AI governance SDK - PII detection, redaction, and cryptographic receipts"
+license = "MIT"
+repository = "https://github.com/torkjacobs/tork-governance"
+homepage = "https://tork.network"
+documentation = "https://docs.tork.network"
+readme = "README.md"
+keywords = ["ai", "governance", "pii", "privacy", "security"]
+categories = ["authentication", "text-processing"]
+
+[dependencies]
+regex = "1.10"
+sha2 = "0.10"
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+
+[lib]
+name = "tork_governance"
+path = "src/lib.rs"
