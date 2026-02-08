@@ -5,12 +5,12 @@ edition = "2021"
 authors = ["Tork Network <developers@tork.network>"]
 description = "On-device AI governance SDK - PII detection, redaction, and cryptographic receipts"
 license = "MIT"
-repository = "https://github.com/torkjacobs/tork-governance"
-homepage = "https://tork.network"
+repository = "https://github.com/torkjacobs/tork-rust-sdk"
+homepage = "https://torknetwork.com"
 documentation = "https://docs.tork.network"
 readme = "README.md"
-keywords = ["ai", "governance", "pii", "privacy", "security"]
-categories = ["authentication", "text-processing"]
+keywords = ["ai", "governance", "pii", "security", "redaction"]
+categories = ["web-programming", "authentication"]
 
 [dependencies]
 regex = "1.10"
