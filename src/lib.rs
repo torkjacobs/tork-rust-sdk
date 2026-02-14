@@ -119,6 +119,13 @@ pub struct GovernanceReceipt {
     pub processing_time_ns: u64,
 }
 
+/// Options for regional and industry-specific PII detection
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct GovernOptions {
+    pub region: Option<Vec<String>>,
+    pub industry: Option<String>,
+}
+
 /// Result of governance operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GovernanceResult {
@@ -126,6 +133,8 @@ pub struct GovernanceResult {
     pub output: String,
     pub pii: PIIDetectionResult,
     pub receipt: GovernanceReceipt,
+    pub region: Option<Vec<String>>,
+    pub industry: Option<String>,
 }
 
 /// Configuration for Tork instance
@@ -300,6 +309,14 @@ impl Tork {
         }
     }
 
+    /// Apply governance with regional and industry-specific detection
+    pub fn govern_with_options(&mut self, input: &str, options: GovernOptions) -> GovernanceResult {
+        let mut result = self.govern(input);
+        result.region = options.region;
+        result.industry = options.industry;
+        result
+    }
+
     /// Apply governance to input text
     pub fn govern(&mut self, input: &str) -> GovernanceResult {
         let start_time = Instant::now();
@@ -350,6 +367,8 @@ impl Tork {
             output,
             pii,
             receipt,
+            region: None,
+            industry: None,
         }
     }
 

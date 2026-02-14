@@ -31,6 +31,34 @@ fn main() {
 }
 ```
 
+## Regional PII Detection (v1.1)
+
+Activate country-specific and industry-specific PII patterns:
+
+```rust
+use tork_governance::{Tork, GovernOptions};
+
+let mut tork = Tork::new();
+
+// UAE regional detection — Emirates ID, +971 phone, PO Box
+let result = tork.govern_with_options(
+    "Emirates ID: 784-1234-1234567-1",
+    GovernOptions { region: Some(vec!["ae".into()]), ..Default::default() },
+);
+
+// Multi-region + industry
+let result = tork.govern_with_options(
+    "Aadhaar: 1234 5678 9012, ICD-10: J45.20",
+    GovernOptions {
+        region: Some(vec!["in".into()]),
+        industry: Some("healthcare".into()),
+    },
+);
+
+// Available regions: AU, US, GB, EU, AE, SA, NG, IN, JP, CN, KR, BR
+// Available industries: healthcare, finance, legal
+```
+
 ## Supported Frameworks (3 Adapters)
 
 ### Web Frameworks
