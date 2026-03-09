@@ -117,6 +117,25 @@ pub struct GovernanceReceipt {
     pub action: GovernanceAction,
     pub policy_version: String,
     pub processing_time_ns: u64,
+    /// Agent/session context when provided.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_context: Option<SessionContext>,
+}
+
+/// Agent/session context for multi-agent governance tracking.
+///
+/// All fields are optional. When provided, they are included in the POST body
+/// to /api/v1/govern and returned in the receipt under `session_context`.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SessionContext {
+    /// Identifier for the agent making the call.
+    pub agent_id: Option<String>,
+    /// Role of the agent: "planner", "worker", or "judge".
+    pub agent_role: Option<String>,
+    /// Groups all calls from the same agent session.
+    pub session_id: Option<String>,
+    /// Position in the conversation (1, 2, 3...).
+    pub session_turn: Option<u32>,
 }
 
 /// Options for regional and industry-specific PII detection
@@ -124,6 +143,8 @@ pub struct GovernanceReceipt {
 pub struct GovernOptions {
     pub region: Option<Vec<String>>,
     pub industry: Option<String>,
+    /// Optional agent/session context for multi-agent tracking.
+    pub session_context: Option<SessionContext>,
 }
 
 /// Result of governance operation
@@ -135,6 +156,8 @@ pub struct GovernanceResult {
     pub receipt: GovernanceReceipt,
     pub region: Option<Vec<String>>,
     pub industry: Option<String>,
+    /// Agent/session context when provided.
+    pub session_context: Option<SessionContext>,
 }
 
 /// Configuration for Tork instance
@@ -314,6 +337,10 @@ impl Tork {
         let mut result = self.govern(input);
         result.region = options.region;
         result.industry = options.industry;
+        if options.session_context.is_some() {
+            result.receipt.session_context = options.session_context.clone();
+            result.session_context = options.session_context;
+        }
         result
     }
 
@@ -347,6 +374,7 @@ impl Tork {
             action,
             policy_version: self.config.policy_version.clone(),
             processing_time_ns,
+            session_context: None,
         };
 
         // Update stats
@@ -369,6 +397,7 @@ impl Tork {
             receipt,
             region: None,
             industry: None,
+            session_context: None,
         }
     }
 
