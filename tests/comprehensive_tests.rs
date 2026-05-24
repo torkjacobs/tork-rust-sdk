@@ -337,7 +337,8 @@ fn test_tork_govern_deny_action() {
     let mut tork = Tork::with_config(config);
     let result = tork.govern("SSN: 123-45-6789");
     assert_eq!(result.action, GovernanceAction::Deny);
-    assert_eq!(result.output, "SSN: 123-45-6789");
+    // Output must be redacted even on Deny — never the raw PII value.
+    assert_eq!(result.output, "SSN: [SSN_REDACTED]");
 }
 
 #[test]

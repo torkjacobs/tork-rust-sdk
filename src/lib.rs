@@ -280,7 +280,8 @@ pub fn detect_pii(text: &str) -> PIIDetectionResult {
             detected_types.insert(pattern.pii_type);
             matches.push(PIIMatch {
                 pii_type: pattern.pii_type,
-                value: mat.as_str().to_string(),
+                // Store placeholder, never the raw PII value.
+                value: "[REDACTED]".to_string(),
                 start_index: mat.start(),
                 end_index: mat.end(),
             });
@@ -354,10 +355,8 @@ impl Tork {
         // Determine action
         let (action, output) = if pii.has_pii {
             let action = self.config.default_action;
-            let output = match action {
-                GovernanceAction::Redact => pii.redacted_text.clone(),
-                _ => input.to_string(),
-            };
+            // Always use redacted text when PII is detected — never expose raw input.
+            let output = pii.redacted_text.clone();
             (action, output)
         } else {
             (GovernanceAction::Allow, input.to_string())
@@ -412,7 +411,8 @@ impl Tork {
                 detected_types.insert(pattern.pii_type);
                 matches.push(PIIMatch {
                     pii_type: pattern.pii_type,
-                    value: mat.as_str().to_string(),
+                    // Store placeholder, never the raw PII value.
+                    value: "[REDACTED]".to_string(),
                     start_index: mat.start(),
                     end_index: mat.end(),
                 });
