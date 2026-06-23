@@ -129,12 +129,16 @@ pub struct GovernanceReceipt {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SessionContext {
     /// Identifier for the agent making the call.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub agent_id: Option<String>,
     /// Role of the agent: "planner", "worker", or "judge".
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub agent_role: Option<String>,
     /// Groups all calls from the same agent session.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
     /// Position in the conversation (1, 2, 3...).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub session_turn: Option<u32>,
 }
 
