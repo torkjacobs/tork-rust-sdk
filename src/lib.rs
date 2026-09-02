@@ -25,6 +25,9 @@
 //! See the middleware module documentation for usage examples.
 
 pub mod middleware;
+pub mod tool_result_scan;
+
+pub use tool_result_scan::*;
 
 use chrono::{DateTime, Utc};
 use regex::Regex;
@@ -33,6 +36,11 @@ use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::time::Instant;
 use uuid::Uuid;
+
+/// This crate's version, as declared in `Cargo.toml`. Used to tag
+/// `tool_result_scan.sdk_version` on the receipt so a byte-identical block
+/// can be traced back to the exact SDK build that produced it.
+pub const SDK_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // ============================================================================
 // Types
@@ -69,6 +77,42 @@ impl PIIType {
             PIIType::DriversLicense => "[DL_REDACTED]",
             PIIType::BankAccount => "[ACCOUNT_REDACTED]",
         }
+    }
+
+    /// The snake_case label for this type, e.g. `"credit_card"`. Used as the
+    /// `finding.type` value on `tool_result_scan` findings, matching the JS
+    /// SDK's `PIIType` string union exactly.
+    pub fn label(&self) -> &'static str {
+        match self {
+            PIIType::Ssn => "ssn",
+            PIIType::CreditCard => "credit_card",
+            PIIType::Email => "email",
+            PIIType::Phone => "phone",
+            PIIType::Address => "address",
+            PIIType::IpAddress => "ip_address",
+            PIIType::DateOfBirth => "date_of_birth",
+            PIIType::Passport => "passport",
+            PIIType::DriversLicense => "drivers_license",
+            PIIType::BankAccount => "bank_account",
+        }
+    }
+
+    /// Every `PIIType` this SDK declares. The single source of truth for the
+    /// parity check that every declared type has a live pattern in
+    /// `get_pii_patterns()` -- see `test_parity_all_declared_pii_types_have_live_patterns`.
+    pub fn all() -> [PIIType; 10] {
+        [
+            PIIType::Ssn,
+            PIIType::CreditCard,
+            PIIType::Email,
+            PIIType::Phone,
+            PIIType::Address,
+            PIIType::IpAddress,
+            PIIType::DateOfBirth,
+            PIIType::Passport,
+            PIIType::DriversLicense,
+            PIIType::BankAccount,
+        ]
     }
 }
 
@@ -120,6 +164,9 @@ pub struct GovernanceReceipt {
     /// Agent/session context when provided.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub session_context: Option<SessionContext>,
+    /// Set only on receipts produced by `Tork::scan_tool_result`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_result_scan: Option<ToolResultScanReceiptBlock>,
 }
 
 /// Agent/session context for multi-agent governance tracking.
@@ -378,6 +425,7 @@ impl Tork {
             policy_version: self.config.policy_version.clone(),
             processing_time_ns,
             session_context: None,
+            tool_result_scan: None,
         };
 
         // Update stats
@@ -570,5 +618,49 @@ mod tests {
         let id2 = generate_receipt_id();
         assert_ne!(id1, id2);
         assert!(id1.starts_with("rcpt_"));
+    }
+
+    // ========================================================================
+    // Parity: SDK-DECLARED-PII-TYPES-WITHOUT-PATTERNS-ACROSS-SDKS (P1)
+    // ========================================================================
+    //
+    // Every SDK checked so far (4/4) had at least one PII type declared in
+    // its public type/vocabulary without a live pattern backing it -- a
+    // silent detection gap: callers see the type and assume it is scanned
+    // for. This test is the standing guard against that gap in this SDK: it
+    // fails if `PIIType::all()` (the declared vocabulary) and
+    // `get_pii_patterns()` (the live patterns) ever diverge in either
+    // direction -- a declared type with no pattern, or a pattern for an
+    // undeclared type.
+    #[test]
+    fn test_parity_all_declared_pii_types_have_live_patterns() {
+        let patterns = get_pii_patterns();
+        let declared = PIIType::all();
+
+        for pii_type in declared.iter() {
+            let pattern = patterns.iter().find(|p| p.pii_type == *pii_type);
+            assert!(
+                pattern.is_some(),
+                "PIIType::{pii_type:?} is declared (in PIIType::all()) but has no pattern in get_pii_patterns() -- \
+                 this is exactly the SDK-DECLARED-PII-TYPES-WITHOUT-PATTERNS-ACROSS-SDKS gap"
+            );
+            // "Live" pattern, not merely present: it must actually compile
+            // and match something plausible for its type, and it must
+            // redact to the label's own placeholder.
+            let pattern = pattern.unwrap();
+            assert!(
+                !pattern.regex.as_str().is_empty(),
+                "PIIType::{pii_type:?}'s pattern is an empty regex"
+            );
+        }
+
+        assert_eq!(
+            patterns.len(),
+            declared.len(),
+            "pattern count ({}) does not match declared PIIType count ({}) -- a type was added to the enum \
+             without a pattern, or a pattern was added for an undeclared type",
+            patterns.len(),
+            declared.len(),
+        );
     }
 }
