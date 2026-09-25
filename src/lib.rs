@@ -25,7 +25,19 @@
 //! See the middleware module documentation for usage examples.
 
 pub mod middleware;
+
+pub mod pii_checksums;
+pub mod pii_country;
+pub mod pii_registry;
 pub mod tool_result_scan;
+
+pub use pii_country::{
+    apply_redactions, detect_country_pii, detect_country_pii_with, infer_regions,
+    patterns_for_regions, CountryPIIMatch, RedactionSpan, KEYWORD_WINDOW_AFTER,
+    KEYWORD_WINDOW_BEFORE,
+};
+pub use pii_registry::{Pattern as CountryPattern, PATTERNS as COUNTRY_PATTERNS_REGISTRY,
+    REGISTRY_VERSION};
 
 pub use tool_result_scan::*;
 
@@ -149,6 +161,40 @@ pub struct PIIDetectionResult {
     pub count: usize,
     pub matches: Vec<PIIMatch>,
     pub redacted_text: String,
+    /// Country-registry detections. Kept separate from `matches` so `PIIType`
+    /// stays the closed ten-value enum it has always been.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub country_matches: Vec<CountryPIIMatchOwned>,
+    /// Redaction labels of those matches, e.g. `NATIONAL_ID`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub country_labels: Vec<String>,
+    /// Country profiles the text activated, in registry order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub regions: Vec<String>,
+}
+
+/// A country match in an owned, serialisable form.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CountryPIIMatchOwned {
+    pub name: String,
+    pub country: String,
+    pub label: String,
+    pub redaction: String,
+    pub start_index: usize,
+    pub end_index: usize,
+}
+
+impl From<&CountryPIIMatch> for CountryPIIMatchOwned {
+    fn from(m: &CountryPIIMatch) -> Self {
+        CountryPIIMatchOwned {
+            name: m.name.to_string(),
+            country: m.country.to_string(),
+            label: m.label.to_string(),
+            redaction: m.redaction.to_string(),
+            start_index: m.start_index,
+            end_index: m.end_index,
+        }
+    }
 }
 
 /// Cryptographic receipt for audit trail
@@ -319,38 +365,157 @@ pub fn generate_receipt_id() -> String {
 // PII Detection
 // ============================================================================
 
-/// Detect PII in text and return detection results with redacted text
+/// Detect PII in text and return detection results with redacted text.
+///
+/// Country profiles are activated from the content itself. Use
+/// [`detect_pii_in_regions`] to force a set of profiles on.
 pub fn detect_pii(text: &str) -> PIIDetectionResult {
+    detect_pii_inner(text, None)
+}
+
+/// Detect PII with an explicit set of country profiles instead of inferring
+/// them from the content. Region codes are case-insensitive.
+pub fn detect_pii_in_regions(text: &str, regions: &[&str]) -> PIIDetectionResult {
+    detect_pii_inner(text, Some(regions))
+}
+
+/// REDACTION IS ONE PASS. Until 0.3.0 each pattern was redacted with its own
+/// `replace_all` over text a previous pattern had already rewritten, while
+/// `matches` carried indices into the ORIGINAL text. Two patterns matching
+/// overlapping spans could leave half an identifier standing beside a redaction
+/// token -- digits exposed in output the caller had been told was redacted.
+/// Every match is now collected against the original text, overlaps are
+/// resolved before anything is rewritten, and the surviving spans are spliced
+/// right to left in a single pass.
+fn detect_pii_inner(text: &str, region_override: Option<&[&str]>) -> PIIDetectionResult {
     let patterns = get_pii_patterns();
     let mut matches: Vec<PIIMatch> = Vec::new();
     let mut detected_types: HashSet<PIIType> = HashSet::new();
-    let mut redacted_text = text.to_string();
 
+    // L0: collect every match against the ORIGINAL text.
+    let mut l0: Vec<(PIIMatch, &'static str)> = Vec::new();
     for pattern in &patterns {
         for mat in pattern.regex.find_iter(text) {
-            detected_types.insert(pattern.pii_type);
-            matches.push(PIIMatch {
-                pii_type: pattern.pii_type,
-                // Store placeholder, never the raw PII value.
-                value: "[REDACTED]".to_string(),
-                start_index: mat.start(),
-                end_index: mat.end(),
-            });
+            if mat.start() == mat.end() {
+                continue;
+            }
+            l0.push((
+                PIIMatch {
+                    pii_type: pattern.pii_type,
+                    // Store placeholder, never the raw PII value.
+                    value: "[REDACTED]".to_string(),
+                    start_index: mat.start(),
+                    end_index: mat.end(),
+                },
+                pattern.pii_type.redaction(),
+            ));
         }
-
-        // Redact this pattern type
-        redacted_text = pattern
-            .regex
-            .replace_all(&redacted_text, pattern.pii_type.redaction())
-            .to_string();
     }
 
+    // Country layer.
+    let regions: Vec<String> = match region_override {
+        Some(r) if !r.is_empty() => r.iter().map(|c| c.to_uppercase()).collect(),
+        _ => pii_country::infer_regions(text)
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect(),
+    };
+    let region_refs: Vec<&str> = regions.iter().map(|s| s.as_str()).collect();
+    let active = pii_country::patterns_for_regions(&region_refs);
+    let country_matches = pii_country::detect_country_pii_with(text, &active);
+
+    // Resolve overlaps before anything is rewritten. A country identifier
+    // supersedes any L0 span it fully contains -- the cloud does the same,
+    // which is how a Saudi national ID stops coming back as [PHONE_REDACTED].
+    let mut claimed: Vec<(usize, usize)> = Vec::new();
+    let mut spans: Vec<pii_country::RedactionSpan> = Vec::new();
+    for c in &country_matches {
+        claimed.push((c.start_index, c.end_index));
+        spans.push(pii_country::RedactionSpan {
+            start_index: c.start_index,
+            end_index: c.end_index,
+            redaction: c.redaction.to_string(),
+        });
+    }
+
+    for (m, redaction) in l0 {
+        let (s, e) = (m.start_index, m.end_index);
+        let overlapping: Vec<(usize, usize)> = claimed
+            .iter()
+            .copied()
+            .filter(|&(rs, re)| s < re && e > rs)
+            .collect();
+        if !overlapping.is_empty() {
+            let swallows_all = overlapping.iter().all(|&(rs, re)| {
+                let (cs, ce) = pii_country_trimmed_core(text, rs, re);
+                s <= cs && e >= ce
+            });
+            if !swallows_all {
+                continue;
+            }
+            // An L0 span that fully contains a country span still loses: the
+            // country label is the more specific claim.
+            let hits_country = overlapping.iter().any(|&(rs, re)| {
+                country_matches
+                    .iter()
+                    .any(|c| c.start_index == rs && c.end_index == re)
+            });
+            if hits_country {
+                continue;
+            }
+            for o in &overlapping {
+                claimed.retain(|c| c != o);
+                spans.retain(|sp| (sp.start_index, sp.end_index) != *o);
+            }
+        }
+        claimed.push((s, e));
+        spans.push(pii_country::RedactionSpan {
+            start_index: s,
+            end_index: e,
+            redaction: redaction.to_string(),
+        });
+        detected_types.insert(m.pii_type);
+        matches.push(m);
+    }
+
+    let redacted_text = pii_country::apply_redactions(text, &spans);
+
+    let mut country_labels: Vec<String> = Vec::new();
+    for c in &country_matches {
+        if !country_labels.iter().any(|l| l == &c.label) {
+            country_labels.push(c.label.to_string());
+        }
+    }
+
+    matches.sort_by_key(|m| m.start_index);
+
     PIIDetectionResult {
-        has_pii: !matches.is_empty(),
+        has_pii: !matches.is_empty() || !country_matches.is_empty(),
         types: detected_types.into_iter().collect(),
-        count: matches.len(),
+        count: matches.len() + country_matches.len(),
         matches,
         redacted_text,
+        country_matches: country_matches.iter().map(Into::into).collect(),
+        country_labels,
+        regions,
+    }
+}
+
+/// The span with leading and trailing non-alphanumeric bytes removed.
+fn pii_country_trimmed_core(content: &str, start: usize, end: usize) -> (usize, usize) {
+    let b = content.as_bytes();
+    let mut s = start;
+    let mut e = end;
+    while s < e && !b[s].is_ascii_alphanumeric() {
+        s += 1;
+    }
+    while e > s && !b[e - 1].is_ascii_alphanumeric() {
+        e -= 1;
+    }
+    if s == e {
+        (start, end)
+    } else {
+        (s, e)
     }
 }
 
@@ -362,7 +527,6 @@ pub fn detect_pii(text: &str) -> PIIDetectionResult {
 pub struct Tork {
     config: TorkConfig,
     stats: TorkStats,
-    patterns: Vec<PIIPattern>,
 }
 
 impl Tork {
@@ -371,7 +535,6 @@ impl Tork {
         Tork {
             config: TorkConfig::default(),
             stats: TorkStats::default(),
-            patterns: get_pii_patterns(),
         }
     }
 
@@ -380,13 +543,18 @@ impl Tork {
         Tork {
             config,
             stats: TorkStats::default(),
-            patterns: get_pii_patterns(),
         }
     }
 
     /// Apply governance with regional and industry-specific detection
     pub fn govern_with_options(&mut self, input: &str, options: GovernOptions) -> GovernanceResult {
-        let mut result = self.govern(input);
+        // `options.region` now drives detection. Until 0.4.0 this called
+        // govern(input) and then copied region and industry onto the result, so
+        // the option was echoed back without ever selecting a pattern.
+        let mut result = match options.region.as_ref() {
+            Some(regions) if !regions.is_empty() => self.govern_in_regions(input, regions),
+            _ => self.govern(input),
+        };
         result.region = options.region;
         result.industry = options.industry;
         if options.session_context.is_some() {
@@ -396,12 +564,28 @@ impl Tork {
         result
     }
 
-    /// Apply governance to input text
+    /// Apply governance to input text with an explicit set of country profiles.
+    pub fn govern_in_regions(&mut self, input: &str, regions: &[String]) -> GovernanceResult {
+        self.govern_inner(input, Some(regions))
+    }
+
+    /// Apply governance to input text.
+    ///
+    /// Country profiles are activated from the content itself. To force a set
+    /// of profiles on, use [`Tork::govern_with_options`] with
+    /// `GovernOptions::region`.
     pub fn govern(&mut self, input: &str) -> GovernanceResult {
+        self.govern_inner(input, None)
+    }
+
+    fn govern_inner(&mut self, input: &str, regions: Option<&[String]>) -> GovernanceResult {
         let start_time = Instant::now();
 
         // Detect PII
-        let pii = self.detect_pii_internal(input);
+        let pii = match regions {
+            Some(r) if !r.is_empty() => self.detect_pii_internal_in_regions(input, r),
+            _ => self.detect_pii_internal(input),
+        };
 
         // Determine action
         let (action, output) = if pii.has_pii {
@@ -452,37 +636,19 @@ impl Tork {
         }
     }
 
-    /// Internal PII detection using cached patterns
+    /// Internal PII detection.
+    ///
+    /// Until 0.4.0 this was a second copy of `detect_pii`, carrying the same
+    /// sequential-replace bug. It now delegates, so there is one implementation
+    /// of the redaction rules and one place to fix them.
     fn detect_pii_internal(&self, text: &str) -> PIIDetectionResult {
-        let mut matches: Vec<PIIMatch> = Vec::new();
-        let mut detected_types: HashSet<PIIType> = HashSet::new();
-        let mut redacted_text = text.to_string();
+        detect_pii(text)
+    }
 
-        for pattern in &self.patterns {
-            for mat in pattern.regex.find_iter(text) {
-                detected_types.insert(pattern.pii_type);
-                matches.push(PIIMatch {
-                    pii_type: pattern.pii_type,
-                    // Store placeholder, never the raw PII value.
-                    value: "[REDACTED]".to_string(),
-                    start_index: mat.start(),
-                    end_index: mat.end(),
-                });
-            }
-
-            redacted_text = pattern
-                .regex
-                .replace_all(&redacted_text, pattern.pii_type.redaction())
-                .to_string();
-        }
-
-        PIIDetectionResult {
-            has_pii: !matches.is_empty(),
-            types: detected_types.into_iter().collect(),
-            count: matches.len(),
-            matches,
-            redacted_text,
-        }
+    /// Internal PII detection with an explicit set of country profiles.
+    fn detect_pii_internal_in_regions(&self, text: &str, regions: &[String]) -> PIIDetectionResult {
+        let refs: Vec<&str> = regions.iter().map(|s| s.as_str()).collect();
+        detect_pii_in_regions(text, &refs)
     }
 
     /// Get current statistics

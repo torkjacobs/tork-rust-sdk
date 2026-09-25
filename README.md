@@ -11,7 +11,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tork-governance = "0.1.0"
+tork-governance = "0.4.0"
 ```
 
 ## Quick Start
@@ -31,45 +31,59 @@ fn main() {
 }
 ```
 
-## Regional PII Detection (v1.1)
+## Country PII detection
 
-Activate country-specific and industry-specific PII patterns:
+23 country profiles, 50 patterns and 20 check digits, generated from Tork's own
+country registry (bundle `1.0.0`) and computed entirely on-device.
+
+Countries: AU, US, GB, EU, AE, SA, NG, IN, JP, CN, KR, BR, CA, ZA, GH, IT, KE,
+MU, MX, MY, PK, SG, TH.
+
+A country's patterns switch on when the text activates that country — the same
+content signals the cloud uses — so ordinary business text is not measured
+against 50 national-identifier patterns it could never contain. On the
+1,159-line business corpus this SDK is tested against, nothing is redacted.
 
 ```rust
-use tork_governance::{Tork, GovernOptions};
+use tork_governance::detect_pii;
 
-let mut tork = Tork::new();
-
-// UAE regional detection — Emirates ID, +971 phone, PO Box
-let result = tork.govern_with_options(
-    "Emirates ID: 784-1234-1234567-1",
-    GovernOptions { region: Some(vec!["ae".into()]), ..Default::default() },
-);
-
-// Multi-region + industry
-let result = tork.govern_with_options(
-    "Aadhaar: 1234 5678 9012, ICD-10: J45.20",
-    GovernOptions {
-        region: Some(vec!["in".into()]),
-        industry: Some("healthcare".into()),
-    },
-);
-
-// Available regions: AU, US, GB, EU, AE, SA, NG, IN, JP, CN, KR, BR
-// Available industries: healthcare, finance, legal
+let r = detect_pii("South African ID number 8001015009087 for the FICA check.");
+assert_eq!(r.regions, vec!["ZA"]);
+assert_eq!(r.country_labels, vec!["ZA_ID"]);
+// r.redacted_text == "South African ID number [ZA_ID_REDACTED] for the FICA check."
 ```
 
-> **Known gap:** `GovernOptions.region` / `GovernOptions.industry` are currently
-> recorded on the result (`result.region`, `result.industry`) but are **not**
-> wired into detection — `govern_with_options` always runs the same Tier 1
-> `get_pii_patterns()` regardless of the region/industry passed in, so there
-> are no Emirates ID, Aadhaar, ICD-10, or other regional/industry patterns
-> behind this example. The two example calls above will not flag the
-> Emirates ID or Aadhaar number as PII. This is tracked separately from the
-> [tool-result scanning](#scanning-tool-results) parity work in this release
-> (which deliberately stays at Tier 1 and does not claim this tier either);
-> fixing it means implementing the missing regional/industry pattern set,
-> not a JS-source port, since the JS SDK doesn't carry this tier at all.
+Force profiles on when you already know the jurisdiction:
+
+```rust
+use tork_governance::{GovernOptions, Tork};
+
+let mut tork = Tork::new();
+let result = tork.govern_with_options(
+    "Documento 529.982.247-25 arquivado.",
+    GovernOptions { region: Some(vec!["br".to_string()]), ..Default::default() },
+);
+// result.output == "Documento [CPF_REDACTED] arquivado."
+```
+
+Three gates keep the false-positive rate down, and all three must pass:
+
+1. **Activation** — one of the country's content signals fires.
+2. **Keyword** — for 18 of the 24 national, tax and health identifiers, one of
+   the identifier's keywords must appear within 60 characters before the match
+   or 40 after.
+3. **Check digit** — for the 10 identifiers whose issuing authority publishes
+   the algorithm, a number of the right shape that fails its check digit is not
+   that country's identifier. Where the algorithm is community-sourced rather
+   than authority-published (`ca_sin`, `emirates_id`, `de_tax_id`, `kr_rrn`,
+   `sa_national_id`) the checksum is advisory and never rejects a match.
+
+Every pattern is asserted to compile under the `regex` crate, which has no
+lookaround at all and, with Swift's NSRegularExpression, bounds the portable
+subset the registry is written in.
+
+Still cloud-only, and not in this SDK: the near-miss fallback, the slot,
+context, gravity and name layers, industry profiles, and org configuration.
 
 ## Supported Frameworks (3 Adapters)
 

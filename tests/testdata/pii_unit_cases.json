@@ -1,0 +1,573 @@
+[
+ {
+  "pattern": "au_acn",
+  "country": "AU",
+  "label": "ACN",
+  "redaction": "[ACN_REDACTED]",
+  "input": "acn 914 776170 on file.",
+  "sample": "914 776170",
+  "expectDetected": true
+ },
+ {
+  "pattern": "us_itin",
+  "country": "US",
+  "label": "ITIN",
+  "redaction": "[ITIN_REDACTED]",
+  "input": "Reference 991-81-7776 on file.",
+  "sample": "991-81-7776",
+  "expectDetected": true
+ },
+ {
+  "pattern": "us_passport_alpha",
+  "country": "US",
+  "label": "PASSPORT",
+  "redaction": "[PASSPORT_REDACTED]",
+  "input": "passport S14177763 on file.",
+  "sample": "S14177763",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uk_phone_full",
+  "country": "GB",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 0761706690 on file.",
+  "sample": "0761706690",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uk_sort_code",
+  "country": "GB",
+  "label": "SORT_CODE",
+  "redaction": "[SORT_CODE_REDACTED]",
+  "input": "sort code 91-41-77 on file.",
+  "sample": "91-41-77",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uk_nino",
+  "country": "GB",
+  "label": "NINO",
+  "redaction": "[NINO_REDACTED]",
+  "input": "national insurance SZ41 7731 D on file.",
+  "sample": "SZ41 7731 D",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uk_nhs",
+  "country": "GB",
+  "label": "NHS",
+  "redaction": "[NHS_REDACTED]",
+  "input": "nhs 289 184 1107 on file.",
+  "sample": "289 184 1107",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uk_nhs",
+  "country": "GB",
+  "label": "NHS",
+  "redaction": "[NHS_REDACTED]",
+  "input": "nhs 289 184 1100 on file.",
+  "sample": "289 184 1100",
+  "expectDetected": false
+ },
+ {
+  "pattern": "uk_postcode",
+  "country": "GB",
+  "label": "UK_POSTCODE",
+  "redaction": "[UK_POSTCODE_REDACTED]",
+  "input": "postcode I12 6ZG on file.",
+  "sample": "I12 6ZG",
+  "expectDetected": true
+ },
+ {
+  "pattern": "de_tax_id",
+  "country": "EU",
+  "label": "TAX_ID",
+  "redaction": "[TAX_ID_REDACTED]",
+  "input": "steuer 91 777317 669 on file.",
+  "sample": "91 777317 669",
+  "expectDetected": true
+ },
+ {
+  "pattern": "emirates_id",
+  "country": "AE",
+  "label": "EMIRATES_ID",
+  "redaction": "[EMIRATES_ID_REDACTED]",
+  "input": "Reference 78414177631706-0 on file.",
+  "sample": "78414177631706-0",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uae_phone",
+  "country": "AE",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 0543910008 on file.",
+  "sample": "0543910008",
+  "expectDetected": true
+ },
+ {
+  "pattern": "uae_landline",
+  "country": "AE",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 043910008 on file.",
+  "sample": "043910008",
+  "expectDetected": true
+ },
+ {
+  "pattern": "po_box",
+  "country": "AE",
+  "label": "PO_BOX",
+  "redaction": "[PO_BOX_REDACTED]",
+  "input": "Reference p.o. Box 7066 on file.",
+  "sample": "p.o. Box 7066",
+  "expectDetected": true
+ },
+ {
+  "pattern": "sa_national_id",
+  "country": "SA",
+  "label": "NATIONAL_ID",
+  "redaction": "[NATIONAL_ID_REDACTED]",
+  "input": "national id 1417776317 on file.",
+  "sample": "1417776317",
+  "expectDetected": true
+ },
+ {
+  "pattern": "sa_phone",
+  "country": "SA",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 0543910008 on file.",
+  "sample": "0543910008",
+  "expectDetected": true
+ },
+ {
+  "pattern": "ng_nin",
+  "country": "NG",
+  "label": "NIN",
+  "redaction": "[NIN_REDACTED]",
+  "input": "nin 91417776317 on file.",
+  "sample": "91417776317",
+  "expectDetected": true
+ },
+ {
+  "pattern": "ng_bvn",
+  "country": "NG",
+  "label": "BVN",
+  "redaction": "[BVN_REDACTED]",
+  "input": "bvn 91417776317 on file.",
+  "sample": "91417776317",
+  "expectDetected": true
+ },
+ {
+  "pattern": "ng_phone",
+  "country": "NG",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 0904150 8063 on file.",
+  "sample": "0904150 8063",
+  "expectDetected": true
+ },
+ {
+  "pattern": "in_aadhaar",
+  "country": "IN",
+  "label": "AADHAAR",
+  "redaction": "[AADHAAR_REDACTED]",
+  "input": "aadhaar 50889579 3289 on file.",
+  "sample": "50889579 3289",
+  "expectDetected": true
+ },
+ {
+  "pattern": "in_aadhaar",
+  "country": "IN",
+  "label": "AADHAAR",
+  "redaction": "[AADHAAR_REDACTED]",
+  "input": "aadhaar 50889579 3280 on file.",
+  "sample": "50889579 3280",
+  "expectDetected": false
+ },
+ {
+  "pattern": "in_pan",
+  "country": "IN",
+  "label": "PAN",
+  "redaction": "[PAN_REDACTED]",
+  "input": "Reference SZYCI1777U on file.",
+  "sample": "SZYCI1777U",
+  "expectDetected": true
+ },
+ {
+  "pattern": "in_phone",
+  "country": "IN",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 64177 63170 on file.",
+  "sample": "64177 63170",
+  "expectDetected": true
+ },
+ {
+  "pattern": "in_ifsc",
+  "country": "IN",
+  "label": "IFSC",
+  "redaction": "[IFSC_REDACTED]",
+  "input": "Reference SZYC0QH524Y on file.",
+  "sample": "SZYC0QH524Y",
+  "expectDetected": true
+ },
+ {
+  "pattern": "in_pincode",
+  "country": "IN",
+  "label": "PINCODE",
+  "redaction": "[PINCODE_REDACTED]",
+  "input": "pin code 241777 on file.",
+  "sample": "241777",
+  "expectDetected": true
+ },
+ {
+  "pattern": "jp_my_number",
+  "country": "JP",
+  "label": "MY_NUMBER",
+  "redaction": "[MY_NUMBER_REDACTED]",
+  "input": "my number 9141 7763 0669 on file.",
+  "sample": "9141 7763 0669",
+  "expectDetected": true
+ },
+ {
+  "pattern": "jp_my_number",
+  "country": "JP",
+  "label": "MY_NUMBER",
+  "redaction": "[MY_NUMBER_REDACTED]",
+  "input": "my number 9141 7763 0660 on file.",
+  "sample": "9141 7763 0660",
+  "expectDetected": false
+ },
+ {
+  "pattern": "jp_phone_intl",
+  "country": "JP",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference +81-7731706690 on file.",
+  "sample": "+81-7731706690",
+  "expectDetected": true
+ },
+ {
+  "pattern": "jp_phone_national",
+  "country": "JP",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "phone 041-7631-6907 on file.",
+  "sample": "041-7631-6907",
+  "expectDetected": true
+ },
+ {
+  "pattern": "cn_resident_id",
+  "country": "CN",
+  "label": "RESIDENT_ID",
+  "redaction": "[RESIDENT_ID_REDACTED]",
+  "input": "resident id 484331207010308554 on file.",
+  "sample": "484331207010308554",
+  "expectDetected": true
+ },
+ {
+  "pattern": "cn_resident_id",
+  "country": "CN",
+  "label": "RESIDENT_ID",
+  "redaction": "[RESIDENT_ID_REDACTED]",
+  "input": "resident id 484331207010308550 on file.",
+  "sample": "484331207010308550",
+  "expectDetected": false
+ },
+ {
+  "pattern": "cn_phone_intl",
+  "country": "CN",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference +8619141777631 on file.",
+  "sample": "+8619141777631",
+  "expectDetected": true
+ },
+ {
+  "pattern": "cn_phone_national",
+  "country": "CN",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "phone 17141777631 on file.",
+  "sample": "17141777631",
+  "expectDetected": true
+ },
+ {
+  "pattern": "kr_rrn",
+  "country": "KR",
+  "label": "RRN",
+  "redaction": "[RRN_REDACTED]",
+  "input": "resident registration 914177-4317066 on file.",
+  "sample": "914177-4317066",
+  "expectDetected": true
+ },
+ {
+  "pattern": "kr_phone_intl",
+  "country": "KR",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference +82-17-317-6907 on file.",
+  "sample": "+82-17-317-6907",
+  "expectDetected": true
+ },
+ {
+  "pattern": "kr_phone_national",
+  "country": "KR",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "phone 016-763 6690 on file.",
+  "sample": "016-763 6690",
+  "expectDetected": true
+ },
+ {
+  "pattern": "br_cpf",
+  "country": "BR",
+  "label": "CPF",
+  "redaction": "[CPF_REDACTED]",
+  "input": "Reference 684839.71054 on file.",
+  "sample": "684839.71054",
+  "expectDetected": true
+ },
+ {
+  "pattern": "br_cpf",
+  "country": "BR",
+  "label": "CPF",
+  "redaction": "[CPF_REDACTED]",
+  "input": "Reference 684839.71050 on file.",
+  "sample": "684839.71050",
+  "expectDetected": false
+ },
+ {
+  "pattern": "br_cnpj",
+  "country": "BR",
+  "label": "CNPJ",
+  "redaction": "[CNPJ_REDACTED]",
+  "input": "Reference 90.662.5171286-07 on file.",
+  "sample": "90.662.5171286-07",
+  "expectDetected": true
+ },
+ {
+  "pattern": "br_cnpj",
+  "country": "BR",
+  "label": "CNPJ",
+  "redaction": "[CNPJ_REDACTED]",
+  "input": "Reference 90.662.5171286-00 on file.",
+  "sample": "90.662.5171286-00",
+  "expectDetected": false
+ },
+ {
+  "pattern": "ca_sin",
+  "country": "CA",
+  "label": "SIN",
+  "redaction": "[SIN_REDACTED]",
+  "input": "Reference 914-777 317 on file.",
+  "sample": "914-777 317",
+  "expectDetected": true
+ },
+ {
+  "pattern": "ca_phone",
+  "country": "CA",
+  "label": "CA_PHONE",
+  "redaction": "[CA_PHONE_REDACTED]",
+  "input": "Reference 141).763-7066 on file.",
+  "sample": "141).763-7066",
+  "expectDetected": true
+ },
+ {
+  "pattern": "ca_postal_code",
+  "country": "CA",
+  "label": "CA_POSTAL",
+  "redaction": "[CA_POSTAL_REDACTED]",
+  "input": "Reference k1Q-7p6 on file.",
+  "sample": "k1Q-7p6",
+  "expectDetected": true
+ },
+ {
+  "pattern": "ca_passport",
+  "country": "CA",
+  "label": "CA_PASSPORT",
+  "redaction": "[CA_PASSPORT_REDACTED]",
+  "input": "passport kz141777 on file.",
+  "sample": "kz141777",
+  "expectDetected": true
+ },
+ {
+  "pattern": "za_id_number",
+  "country": "ZA",
+  "label": "ZA_ID",
+  "redaction": "[ZA_ID_REDACTED]",
+  "input": "Reference 4110316405094 on file.",
+  "sample": "4110316405094",
+  "expectDetected": true
+ },
+ {
+  "pattern": "za_id_number",
+  "country": "ZA",
+  "label": "ZA_ID",
+  "redaction": "[ZA_ID_REDACTED]",
+  "input": "Reference 4110316405090 on file.",
+  "sample": "4110316405090",
+  "expectDetected": false
+ },
+ {
+  "pattern": "za_phone",
+  "country": "ZA",
+  "label": "PHONE",
+  "redaction": "[PHONE_REDACTED]",
+  "input": "Reference 083150 8063 on file.",
+  "sample": "083150 8063",
+  "expectDetected": true
+ },
+ {
+  "pattern": "gh_ghana_card",
+  "country": "GH",
+  "label": "GHANA_CARD",
+  "redaction": "[GHANA_CARD_REDACTED]",
+  "input": "ghana card IDP-77631706-R on file.",
+  "sample": "IDP-77631706-R",
+  "expectDetected": true
+ },
+ {
+  "pattern": "it_codice_fiscale",
+  "country": "IT",
+  "label": "CODICE_FISCALE",
+  "redaction": "[CODICE_FISCALE_REDACTED]",
+  "input": "codice fiscale RFBWVH41S76R487R on file.",
+  "sample": "RFBWVH41S76R487R",
+  "expectDetected": true
+ },
+ {
+  "pattern": "it_codice_fiscale",
+  "country": "IT",
+  "label": "CODICE_FISCALE",
+  "redaction": "[CODICE_FISCALE_REDACTED]",
+  "input": "codice fiscale RFBWVH41S76R480R on file.",
+  "sample": "RFBWVH41S76R480R",
+  "expectDetected": false
+ },
+ {
+  "pattern": "ke_kra_pin",
+  "country": "KE",
+  "label": "KRA_PIN",
+  "redaction": "[KRA_PIN_REDACTED]",
+  "input": "kra pin A417776317A on file.",
+  "sample": "A417776317A",
+  "expectDetected": true
+ },
+ {
+  "pattern": "mu_tan",
+  "country": "MU",
+  "label": "TAN",
+  "redaction": "[TAN_REDACTED]",
+  "input": "tax account number 71417776 on file.",
+  "sample": "71417776",
+  "expectDetected": true
+ },
+ {
+  "pattern": "mx_rfc",
+  "country": "MX",
+  "label": "RFC",
+  "redaction": "[RFC_REDACTED]",
+  "input": "rfc SZYC417776NG5 on file.",
+  "sample": "SZYC417776NG5",
+  "expectDetected": true
+ },
+ {
+  "pattern": "my_mykad",
+  "country": "MY",
+  "label": "MYKAD",
+  "redaction": "[MYKAD_REDACTED]",
+  "input": "mykad 914177-63-0669 on file.",
+  "sample": "914177-63-0669",
+  "expectDetected": true
+ },
+ {
+  "pattern": "pk_cnic",
+  "country": "PK",
+  "label": "CNIC",
+  "redaction": "[CNIC_REDACTED]",
+  "input": "cnic 914177631706-0 on file.",
+  "sample": "914177631706-0",
+  "expectDetected": true
+ },
+ {
+  "pattern": "sg_nric",
+  "country": "SG",
+  "label": "NRIC",
+  "redaction": "[NRIC_REDACTED]",
+  "input": "nric T9693716J on file.",
+  "sample": "T9693716J",
+  "expectDetected": true
+ },
+ {
+  "pattern": "sg_nric",
+  "country": "SG",
+  "label": "NRIC",
+  "redaction": "[NRIC_REDACTED]",
+  "input": "nric T9693710J on file.",
+  "sample": "T9693710J",
+  "expectDetected": false
+ },
+ {
+  "pattern": "th_national_id",
+  "country": "TH",
+  "label": "NATIONAL_ID",
+  "redaction": "[NATIONAL_ID_REDACTED]",
+  "input": "national id 43915-0806308-7 on file.",
+  "sample": "43915-0806308-7",
+  "expectDetected": true
+ },
+ {
+  "pattern": "th_national_id",
+  "country": "TH",
+  "label": "NATIONAL_ID",
+  "redaction": "[NATIONAL_ID_REDACTED]",
+  "input": "national id 43915-0806308-0 on file.",
+  "sample": "43915-0806308-0",
+  "expectDetected": false
+ },
+ {
+  "pattern": "id_nik",
+  "country": "ID",
+  "label": "NIK",
+  "redaction": "[NIK_REDACTED]",
+  "input": "nik 3171010101900001 on file.",
+  "sample": "3171010101900001",
+  "expectDetected": true,
+  "note": "short spelling, whole-word"
+ },
+ {
+  "pattern": "id_nik",
+  "country": "ID",
+  "label": "NIK",
+  "redaction": "[NIK_REDACTED]",
+  "input": "Nomor Induk Kependudukan 3171010101900001 on file.",
+  "sample": "3171010101900001",
+  "expectDetected": true,
+  "note": "long spelling, substring"
+ },
+ {
+  "pattern": "id_nik",
+  "country": "ID",
+  "label": "NIK",
+  "redaction": "[NIK_REDACTED]",
+  "input": "Faktur teknik 3171010101900001 untuk pabrik.",
+  "sample": "3171010101900001",
+  "expectDetected": false,
+  "note": "\"nik\" inside teknik must NOT open the gate"
+ },
+ {
+  "pattern": "id_nik",
+  "country": "ID",
+  "label": "NIK",
+  "redaction": "[NIK_REDACTED]",
+  "input": "Data elektronik 3171010101900001 di klinik.",
+  "sample": "3171010101900001",
+  "expectDetected": false,
+  "note": "\"nik\" inside elektronik/klinik must NOT open the gate"
+ }
+]
