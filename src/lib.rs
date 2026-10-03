@@ -253,7 +253,8 @@ pub struct GovernanceResult {
     pub receipt: GovernanceReceipt,
     pub region: Option<Vec<String>>,
     pub industry: Option<String>,
-    /// Agent/session context when provided.
+    /// Agent/session context when provided. Omitted from serialised output when unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_context: Option<SessionContext>,
 }
 
