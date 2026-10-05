@@ -524,7 +524,7 @@ fn test_receipt_has_processing_time() {
     let mut tork = Tork::new();
     let result = tork.govern("test");
     // Processing time should be non-negative
-    assert!(result.receipt.processing_time_ns >= 0);
+    let _ = result.receipt.processing_time_ns; // u64: always >= 0
 }
 
 #[test]

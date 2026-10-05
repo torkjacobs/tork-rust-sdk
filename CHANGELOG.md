@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 - 2026-10-03
+
+### Added
+- Agent telemetry fields `agent_id`, `agent_role`, `session_id`, `session_turn`
+  (integer) via `GovernOptions::session_context` (`SessionContext`). Passed
+  through to `GovernanceResult` and the receipt when set; omitted from
+  serialised output when not set (`GovernanceResult.session_context` previously
+  serialised as `null`).
+- `tests/pii_types_and_session_tests.rs`: a positive and a negative example for
+  every declared PII type, plus pass-through/omission tests for the telemetry
+  fields.
+
+### PII types (S01 parity check)
+All 10 declared types (ssn, credit_card, email, phone, address, ip_address,
+date_of_birth, passport, drivers_license, bank_account) have a live pattern;
+none removed.
+
 ## 0.4.0 - 2026-09-25
 
 ### Added

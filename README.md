@@ -309,6 +309,27 @@ let receipt_id = generate_receipt_id();
 | Driver's License | D1234567 | [DL_REDACTED] |
 | Bank Account | 12345678901234 | [ACCOUNT_REDACTED] |
 
+## Agent telemetry fields
+
+Optional `agent_id`, `agent_role`, `session_id` and `session_turn` (integer)
+travel in `SessionContext`. They are included on the result and receipt when
+set and omitted when not.
+
+```rust
+use tork_governance::{Tork, GovernOptions, SessionContext};
+
+let mut tork = Tork::new();
+let result = tork.govern_with_options("hello", GovernOptions {
+    session_context: Some(SessionContext {
+        agent_id: Some("agent-1".into()),
+        agent_role: Some("planner".into()),
+        session_id: Some("sess-9".into()),
+        session_turn: Some(3),
+    }),
+    ..Default::default()
+});
+```
+
 ## Performance
 
 Target latency: <500 microseconds on edge hardware (pending hardware validation).
